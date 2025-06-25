@@ -1,17 +1,17 @@
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
-const connectDB = require('./config/db.config');
+const connectDB = require('../src/config/db.config');
 const cookieParser = require('cookie-parser');
 require('dotenv').config();
 
 // Import routes
-const cabinRoutes = require('./routes/cabin.routes');
-const bookingRoutes = require('./routes/booking.routes');
-const guestRoutes = require('./routes/guest.routes');
-const settingRoutes = require('./routes/setting.routes');
-const authRoutes = require('./routes/auth.routes');
-const { notFound, errorHandler } = require('./middleware/error.middleware');
+const cabinRoutes = require('../src/routes/cabin.routes');
+const bookingRoutes = require('../src/routes/booking.routes');
+const guestRoutes = require('../src/routes/guest.routes');
+const settingRoutes = require('../src/routes/setting.routes');
+const authRoutes = require('../src/routes/auth.routes');
+const { notFound, errorHandler } = require('../src/middleware/error.middleware');
 
 // Connect to MongoDB
 connectDB();
