@@ -33,8 +33,25 @@ const corsOptions = {
   ],
   credentials: true,
 };
-const configuredCors = cors(corsOptions);
-app.use(configuredCors);
+app.use(cors({
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      'http://localhost:5173',
+      'https://mern-hotel-admin-dashboard.netlify.app',
+      'https://hotel-dashboard-react.vercel.app',
+    ];
+    const allowedRegex = /^https:\/\/.*\.(netlify\.app|vercel\.app)$/;
+
+    if (!origin || allowedOrigins.includes(origin) || allowedRegex.test(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS not allowed for origin: ${origin}`));
+    }
+  },
+  credentials: true,
+}));
+
+
 app.use(morgan("dev"));
 app.use(express.json());
 app.use(cookieParser());
