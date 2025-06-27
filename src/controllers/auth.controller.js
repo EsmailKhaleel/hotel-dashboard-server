@@ -114,7 +114,7 @@ exports.login = async (req, res, next) => {
             user
         });
     } catch (error) {
-        response.errorResponse(res, 'Server error', 500);
+        errorResponse(res, 'Server error', 500);
         next(error);
     }
 };
