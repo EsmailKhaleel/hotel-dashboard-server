@@ -89,7 +89,7 @@ exports.createBooking = async (req, res) => {
     ) {
       return errorResponse(res, "Invalid cabin or guest ID format", 400);
     }
-    const validation = validateBookingBody(req.body);
+    const validation = await validateBookingBody(req.body);
     if (!validation.isValid) {
       return errorResponse(res, validation.error, 400);
     }

@@ -10,18 +10,22 @@ exports.validateBookingBody = async (body) => {
     const missingFields = requiredFields.filter(field => !body[field]);
 
     const cabin = await Cabin.findById(body.cabinId);
+    
     if(!cabin) {
         return {
             isValid: false,
             error: 'Cabin not found'
         };
     }
+
     if (cabin && cabin.maxCapacity < body.numGuests) {
+        console.log("if cabin && cabin.maxCapacity < body.numGuests");
         return {
             isValid: false,
             error: 'Number of guests exceeds the maximum capacity of the cabin'
         };
     }
+
     const guest = await Guest.findById(body.guestId);
     if(!guest) {
         return {
@@ -30,7 +34,6 @@ exports.validateBookingBody = async (body) => {
         };
     }
 
-    
     if (missingFields.length > 0) {
         return {
             isValid: false,
