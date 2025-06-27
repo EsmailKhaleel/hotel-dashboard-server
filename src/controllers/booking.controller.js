@@ -83,17 +83,17 @@ exports.getBooking = async (req, res) => {
 // Create booking
 exports.createBooking = async (req, res) => {
   try {
-    const validation = validateBookingBody(req.body);
-    if (!validation.isValid) {
-      return errorResponse(res, validation.error, 400);
-    }
-
     if (
       !validateMongoId(req.body.cabinId) ||
       !validateMongoId(req.body.guestId)
     ) {
       return errorResponse(res, "Invalid cabin or guest ID format", 400);
     }
+    const validation = validateBookingBody(req.body);
+    if (!validation.isValid) {
+      return errorResponse(res, validation.error, 400);
+    }
+
 
     const booking = new Booking(req.body);
     await booking.save();

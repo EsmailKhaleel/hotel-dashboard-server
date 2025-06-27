@@ -1,12 +1,35 @@
 const mongoose = require('mongoose');
-
+const Cabin = require('../models/cabin.model');
+const Guest = require('../models/guest.model');
 // Validation functions
 exports.validateMongoId = (id) => mongoose.Types.ObjectId.isValid(id);
 
 // Validate cabin, guest, booking and setting  bodies
-exports.validateBookingBody = (body) => {
+exports.validateBookingBody = async (body) => {
     const requiredFields = ['startDate', 'endDate', 'numNights', 'numGuests', 'cabinPrice', 'totalPrice', 'cabinId', 'guestId'];
     const missingFields = requiredFields.filter(field => !body[field]);
+
+    const cabin = await Cabin.findById(body.cabinId);
+    if(!cabin) {
+        return {
+            isValid: false,
+            error: 'Cabin not found'
+        };
+    }
+    if (cabin && cabin.maxCapacity < body.numGuests) {
+        return {
+            isValid: false,
+            error: 'Number of guests exceeds the maximum capacity of the cabin'
+        };
+    }
+    const guest = await Guest.findById(body.guestId);
+    if(!guest) {
+        return {
+            isValid: false,
+            error: 'Guest not found'
+        };
+    }
+
     
     if (missingFields.length > 0) {
         return {
