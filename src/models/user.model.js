@@ -22,7 +22,7 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Password is required'],
         minlength: [6, 'Password must be at least 6 characters long'],
-        select: false
+        select: false // Hides the password field from queries by default
     },
     image: {
         type: String,
@@ -30,8 +30,8 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ['employee', 'admin'],
-        default: 'employee'
+        enum: ['employee', 'admin', 'guest'],
+        default: 'guest'
     },
     bookings: [{
         type: mongoose.Schema.Types.ObjectId,

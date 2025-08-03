@@ -1,26 +1,35 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 const {
-    getAllGuests,
-    getGuest,
-    createGuest,
-    updateGuest,
-    deleteGuest
-} = require('../controllers/guest.controller');
+  getAllGuests,
+  getGuest,
+  createGuest,
+  updateGuest,
+  deleteGuest,
+  getGuestByEmail,
+  getBookingsByGuestId
+} = require("../controllers/guest.controller");
+const uploud = require("../utils/helper");
 
 // Get all guests
-router.get('/', getAllGuests);
+router.get("/", getAllGuests);
+
+// Get guest by email
+router.get("/email/:email", getGuestByEmail);
 
 // Get single guest
-router.get('/:id', getGuest);
+router.get("/:id", getGuest);
+
+// Get bookings by guest ID
+router.get("/:id/bookings", getBookingsByGuestId);
 
 // Create new guest
-router.post('/', createGuest);
+router.post("/", createGuest);
 
 // Update guest
-router.patch('/:id', updateGuest);
+router.patch("/:id", uploud, updateGuest);
 
 // Delete guest
-router.delete('/:id', deleteGuest);
+router.delete("/:id", deleteGuest);
 
 module.exports = router;

@@ -41,7 +41,7 @@ exports.protect = async (req, res, next) => {
   }
 };
 
-// Restrict to specific roles
+// Restrict to specific roles for role-based access control (RBAC)
 exports.authorize = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {

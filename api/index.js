@@ -21,17 +21,7 @@ const {
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
-const corsOptions = {
-  origin: [
-    "https://mern-hotel-admin-dashboard.netlify.app",
-    "https://685c8f5112c14d0008a64a66--mern-hotel-admin-dashboard.netlify.app",
-    "https://685c35fd1c5b8bb904bbd48e--mern-hotel-admin-dashboard.netlify.app",
-    "https://hotel-dashboard-react.vercel.app",
-    "http://localhost:5173",
-  ],
-  credentials: true,
-};
+
 app.use(cors({
   origin: (origin, callback) => {
     const allowedOrigins = [
@@ -72,6 +62,7 @@ app.use(notFound);
 app.use(errorHandler);
 
 
+// Ensure server starts after database connection
 const startServer = async () => {
   try {
     await connectDB(); 

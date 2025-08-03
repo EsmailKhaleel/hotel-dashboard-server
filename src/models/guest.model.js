@@ -15,18 +15,18 @@ const guestSchema = new Schema({
   },
   nationality: {
     type: String,
-    required: true,
-    trim: true
+    trim: true,
+    default: ''  
   },
   countryFlag: {
     type: String,
-    required: true,
-    trim: true
+    trim: true,
+    default: ''
   },
   nationalID: {
     type: String,
-    required: true,
-    trim: true
+    trim: true,
+    default: ''
   },
   phoneNumber: {
     type: String,
@@ -37,6 +37,11 @@ const guestSchema = new Schema({
     type: String,
     trim: true,
     default: ''
+  },
+  image: {
+    type: String,
+    trim: true,
+    default: '' // Default empty string if no image is provided
   }
 }, { timestamps: true });
 

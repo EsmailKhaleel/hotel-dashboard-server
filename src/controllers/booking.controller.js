@@ -2,6 +2,7 @@ const { isToday, parseISO } = require("date-fns");
 const Booking = require("../models/booking.model");
 const { errorResponse } = require("../utils/response.utils");
 const { validateMongoId, validateBookingBody } = require("../utils/validators");
+const Guest = require("../models/guest.model");
 
 // Helper function to get today's date at midnight and end of day
 const getToday = function (options = {}) {
@@ -77,6 +78,26 @@ exports.getBooking = async (req, res) => {
     });
   } catch (err) {
     return errorResponse(res, "Error retrieving booking", 500);
+  }
+};
+
+// Get bookings dates by cabin ID
+exports.getBookingsDatesByCabinId = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!validateMongoId(id)) {
+      return errorResponse(res, "Invalid cabin ID format", 400);
+    }
+    const bookingsDates = await Booking.find({ 
+      cabinId: id, 
+    }).select("startDate endDate").lean();
+    console.log("Bookings Dates:", bookingsDates);
+    res.status(200).json({
+      status: true,
+      dates: bookingsDates,
+    });
+  } catch (err) {
+    return errorResponse(res, "Error retrieving bookings dates", 500);
   }
 };
 
@@ -253,7 +274,6 @@ exports.getStaysAfterDate = async (req, res) => {
 
 exports.getStaysTodayActivity = async (req, res) => {
   try {
-    const today = getToday({ end: false });
     // quer stay that stay.status==="unconfirmed" && isToday(stay.startDate)
     // quer stay that stay.status==="checked-in" && isToday(stay.endDate)
      const stays = await Booking.find({
@@ -273,3 +293,30 @@ exports.getStaysTodayActivity = async (req, res) => {
     return errorResponse(res, "Error retrieving today's stays", 500);
   }
 }
+
+// Get Reservations for a specific guest by guest ID (which are unconfirmed bookings)
+exports.getReservationsByGuestId = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!validateMongoId(id)) {
+      return errorResponse(res, "Invalid guest ID format", 400);
+    }
+
+    const guest = await Guest.findById(id);
+    if (!guest) {
+      return errorResponse(res, "Guest not found", 404);
+    }
+
+    const reservations = await Booking.find({
+      guestId: id,
+      status: "unconfirmed",
+    }).populate("cabinId");
+
+    res.status(200).json({
+      status: true,
+      reservations,
+    });
+  } catch (err) {
+    return errorResponse(res, "Error retrieving reservations", 500);
+  }
+};

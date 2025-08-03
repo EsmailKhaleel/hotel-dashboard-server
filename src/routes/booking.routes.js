@@ -9,7 +9,9 @@ const {
     updateBookingStatus,
     getBookingsAfterDate,
     getStaysAfterDate,
-    getStaysTodayActivity
+    getStaysTodayActivity,
+    getBookingsDatesByCabinId,
+    getReservationsByGuestId
 } = require('../controllers/booking.controller');
 
 // Get all bookings
@@ -28,6 +30,12 @@ router.get('/stays-today-activity', getStaysTodayActivity);
 
 // Get single booking
 router.get('/:id', getBooking);
+
+// Get reservations by guest ID
+router.get('/guest/:id/reservations', getReservationsByGuestId);
+
+// Get booking dates by cabin ID
+router.get('/:id/dates', getBookingsDatesByCabinId);
 
 // Create new booking
 router.post('/', createBooking);
