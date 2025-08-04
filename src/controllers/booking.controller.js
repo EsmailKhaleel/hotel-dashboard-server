@@ -196,7 +196,7 @@ exports.updateBookingStatus = async (req, res) => {
       return errorResponse(res, "Invalid booking ID format", 400);
     }
 
-    if (!status || !["pending", "confirmed", "cancelled"].includes(status)) {
+    if (!status || !["unconfirmed", "confirmed", "checked-in", "checked-out"].includes(status)) {
       return errorResponse(res, "Invalid status value", 400);
     }
 
@@ -218,6 +218,51 @@ exports.updateBookingStatus = async (req, res) => {
     });
   } catch (err) {
     return errorResponse(res, "Error updating booking status", 400);
+  }
+};
+
+// Update payment status
+exports.updatePaymentStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isPaid, paymentIntentId, status } = req.body;
+
+    if (!validateMongoId(id)) {
+      return errorResponse(res, "Invalid booking ID format", 400);
+    }
+
+    const updateData = {};
+    
+    if (typeof isPaid === 'boolean') {
+      updateData.isPaid = isPaid;
+    }
+    
+    if (paymentIntentId) {
+      updateData.paymentIntentId = paymentIntentId;
+    }
+    
+    if (status && ["unconfirmed", "confirmed", "checked-in", "checked-out"].includes(status)) {
+      updateData.status = status;
+    }
+
+    const booking = await Booking.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true, runValidators: true }
+    )
+      .populate("cabinId")
+      .populate("guestId");
+
+    if (!booking) {
+      return errorResponse(res, "Booking not found", 404);
+    }
+
+    res.status(200).json({
+      status: true,
+      booking: booking,
+    });
+  } catch (err) {
+    return errorResponse(res, "Error updating payment status", 400);
   }
 };
 
@@ -319,4 +364,4 @@ exports.getReservationsByGuestId = async (req, res) => {
   } catch (err) {
     return errorResponse(res, "Error retrieving reservations", 500);
   }
-};
+}; 

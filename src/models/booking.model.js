@@ -39,7 +39,7 @@ const bookingSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ['unconfirmed', 'checked-in', 'checked-out'],
+        enum: ['unconfirmed', 'confirmed', 'checked-in', 'checked-out'],
         default: 'unconfirmed'
     },
     hasBreakfast: {
@@ -49,6 +49,10 @@ const bookingSchema = new Schema({
     isPaid: {
         type: Boolean,
         default: false
+    },
+    paymentIntentId: {
+        type: String,
+        trim: true
     },
     observations: {
         type: String,
@@ -75,4 +79,4 @@ bookingSchema.plugin(mongoosePaginate);
 
 const bookingModel = mongoose.model('Booking', bookingSchema);
 
-module.exports = bookingModel;
+module.exports = bookingModel; 

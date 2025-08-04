@@ -26,8 +26,9 @@ app.use(cors({
   origin: (origin, callback) => {
     const allowedOrigins = [
       'http://localhost:5173',
+      'http://localhost:3000',
       'https://mern-hotel-admin-dashboard.netlify.app',
-      'https://hotel-dashboard-react.vercel.app',
+      'https://hotel-dashboard-react.vercel.app'
     ];
     const allowedRegex = /^https:\/\/.*\.(netlify\.app|vercel\.app)$/;
 
