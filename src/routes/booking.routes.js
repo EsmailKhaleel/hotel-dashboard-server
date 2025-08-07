@@ -18,8 +18,6 @@ const {
 // Get all bookings
 router.get('/', getAllBookings);
 
-// Get single booking
-router.get('/:id', getBooking);
 
 // Create new booking
 router.post('/', createBooking);
@@ -53,5 +51,8 @@ router.get('/:id/dates', getBookingsDatesByCabinId);
 
 // Get reservations by guest ID
 router.get('/guest/:id/reservations', getReservationsByGuestId);
+
+// Get single booking
+router.get('/:id', getBooking);
 
 module.exports = router;
