@@ -8,12 +8,37 @@ const Guest = require("../models/guest.model");
 const getToday = function (options = {}) {
   const today = new Date();
 
-  if (options?.end)
-    today.setUTCHours(23, 59, 59, 999);
+  if (options?.end) today.setUTCHours(23, 59, 59, 999);
   else today.setUTCHours(0, 0, 0, 0);
   return today.toISOString();
 };
-
+// Get today's start and end in UTC
+const getTodayRange = () => {
+  const now = new Date();
+  const start = new Date(
+    Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate(),
+      0,
+      0,
+      0,
+      0
+    )
+  );
+  const end = new Date(
+    Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate(),
+      23,
+      59,
+      59,
+      999
+    )
+  );
+  return { start, end };
+};
 // Get all bookings with populated cabin and guest details
 exports.getAllBookings = async (req, res) => {
   const { status, sortBy, sortOrder, page = 1, limit = 10 } = req.query;
@@ -88,9 +113,11 @@ exports.getBookingsDatesByCabinId = async (req, res) => {
     if (!validateMongoId(id)) {
       return errorResponse(res, "Invalid cabin ID format", 400);
     }
-    const bookingsDates = await Booking.find({ 
-      cabinId: id, 
-    }).select("startDate endDate").lean();
+    const bookingsDates = await Booking.find({
+      cabinId: id,
+    })
+      .select("startDate endDate")
+      .lean();
     console.log("Bookings Dates:", bookingsDates);
     res.status(200).json({
       status: true,
@@ -114,7 +141,6 @@ exports.createBooking = async (req, res) => {
     if (!validation.isValid) {
       return errorResponse(res, validation.error, 400);
     }
-
 
     const booking = new Booking(req.body);
     await booking.save();
@@ -196,7 +222,12 @@ exports.updateBookingStatus = async (req, res) => {
       return errorResponse(res, "Invalid booking ID format", 400);
     }
 
-    if (!status || !["unconfirmed", "confirmed", "checked-in", "checked-out"].includes(status)) {
+    if (
+      !status ||
+      !["unconfirmed", "confirmed", "checked-in", "checked-out"].includes(
+        status
+      )
+    ) {
       return errorResponse(res, "Invalid status value", 400);
     }
 
@@ -232,24 +263,26 @@ exports.updatePaymentStatus = async (req, res) => {
     }
 
     const updateData = {};
-    
-    if (typeof isPaid === 'boolean') {
+
+    if (typeof isPaid === "boolean") {
       updateData.isPaid = isPaid;
     }
-    
+
     if (paymentIntentId) {
       updateData.paymentIntentId = paymentIntentId;
     }
-    
-    if (status && ["unconfirmed", "confirmed", "checked-in", "checked-out"].includes(status)) {
+
+    if (
+      status &&
+      ["unconfirmed", "confirmed", "checked-in", "checked-out"].includes(status)
+    ) {
       updateData.status = status;
     }
 
-    const booking = await Booking.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true, runValidators: true }
-    )
+    const booking = await Booking.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    })
       .populate("cabinId")
       .populate("guestId");
 
@@ -269,27 +302,24 @@ exports.updatePaymentStatus = async (req, res) => {
 // Get bookings created after a specific date
 exports.getBookingsAfterDate = async (req, res) => {
   try {
-    //  date must be in ISO format, e.g. 2025-10-01T00:00:00Z
     const { date } = req.query;
-    if (!date) {
-      return errorResponse(res, "Date query parameter is required", 400);
-    }
+    if (!date) return errorResponse(res, "Date query parameter is required", 400);
+
+    const from = new Date(date);
+    if (Number.isNaN(from.getTime())) return errorResponse(res, "Invalid ISO date", 400);
+
+    const { end } = getTodayRangeUTC();
 
     const bookings = await Booking.find({
-      created_at: {
-        $gte: date,
-        $lt: getToday({ endOfDay: true }),
-      },
-    }).select("created_at extrasPrice totalPrice");
+      createdAt: { $gte: from, $lte: end }, // use timestamps field
+    }).select("createdAt extrasPrice totalPrice").lean();
 
-    res.status(200).json({
-      status: true,
-      bookings,
-    });
+    res.status(200).json({ status: true, bookings });
   } catch (err) {
     return errorResponse(res, "Error retrieving bookings", 500);
   }
 };
+
 
 // Get stays (confirmed or checked-in bookings) after a specific startDate
 exports.getStaysAfterDate = async (req, res) => {
@@ -299,12 +329,12 @@ exports.getStaysAfterDate = async (req, res) => {
     if (!date) {
       return errorResponse(res, "Date query parameter is required", 400);
     }
-    
+
     const stays = await Booking.find({
-      startDate: { 
+      startDate: {
         $gte: date,
         $lt: getToday({ endOfDay: false }),
-     },
+      },
       status: { $in: ["checked-out", "checked-in"] },
     });
 
@@ -319,26 +349,31 @@ exports.getStaysAfterDate = async (req, res) => {
 
 exports.getStaysTodayActivity = async (req, res) => {
   try {
-    // quer stay that stay.status==="unconfirmed" && isToday(stay.startDate)
-    // quer stay that stay.status==="checked-in" && isToday(stay.endDate)
-     const stays = await Booking.find({
-      status: { $in: ["unconfirmed", "checked-in", "confirmed"] }
-    }).populate("guestId").lean();
+    const { start, end } = getTodayRange();
 
-    const activities = stays.filter(stay =>
-      (stay.status === "unconfirmed" && isToday(parseISO(stay.startDate.toISOString()))) ||
-      (stay.status === "checked-in" && isToday(parseISO(stay.endDate.toISOString()))) ||
-      (stay.status === "confirmed" && isToday(parseISO(stay.startDate.toISOString())))
-    );
+    // Query directly in MongoDB
+    const stays = await Booking.find({
+      $or: [
+        // Unconfirmed or confirmed starting today
+        {
+          status: { $in: ["unconfirmed", "confirmed"] },
+          startDate: { $gte: start, $lte: end },
+        },
+        // Checked-in and ending today
+        { status: "checked-in", endDate: { $gte: start, $lte: end } },
+      ],
+    })
+      .populate("guestId")
+      .lean();
 
     res.status(200).json({
       status: true,
-      activities,
+      activities: stays,
     });
   } catch (err) {
     return errorResponse(res, "Error retrieving today's stays", 500);
   }
-}
+};
 
 // Get Reservations for a specific guest by guest ID (which are unconfirmed bookings)
 exports.getReservationsByGuestId = async (req, res) => {
@@ -365,4 +400,4 @@ exports.getReservationsByGuestId = async (req, res) => {
   } catch (err) {
     return errorResponse(res, "Error retrieving reservations", 500);
   }
-}; 
+};
