@@ -308,7 +308,7 @@ exports.getBookingsAfterDate = async (req, res) => {
     const from = new Date(date);
     if (Number.isNaN(from.getTime())) return errorResponse(res, "Invalid ISO date", 400);
 
-    const { end } = getTodayRangeUTC();
+    const { end } = getTodayRange();
 
     const bookings = await Booking.find({
       createdAt: { $gte: from, $lte: end }, // use timestamps field
