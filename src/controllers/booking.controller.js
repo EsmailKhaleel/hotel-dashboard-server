@@ -322,12 +322,13 @@ exports.getStaysTodayActivity = async (req, res) => {
     // quer stay that stay.status==="unconfirmed" && isToday(stay.startDate)
     // quer stay that stay.status==="checked-in" && isToday(stay.endDate)
      const stays = await Booking.find({
-      status: { $in: ["unconfirmed", "checked-in"] }
+      status: { $in: ["unconfirmed", "checked-in", "confirmed"] }
     }).populate("guestId").lean();
 
     const activities = stays.filter(stay =>
       (stay.status === "unconfirmed" && isToday(parseISO(stay.startDate.toISOString()))) ||
-      (stay.status === "checked-in" && isToday(parseISO(stay.endDate.toISOString())))
+      (stay.status === "checked-in" && isToday(parseISO(stay.endDate.toISOString()))) ||
+      (stay.status === "confirmed" && isToday(parseISO(stay.startDate.toISOString())))
     );
 
     res.status(200).json({
