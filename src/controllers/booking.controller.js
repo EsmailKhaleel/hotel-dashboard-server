@@ -311,8 +311,9 @@ exports.getBookingsAfterDate = async (req, res) => {
     const { end } = getTodayRange();
 
     const bookings = await Booking.find({
-      createdAt: { $gte: from, $lte: end }, // use timestamps field
-    }).select("createdAt extrasPrice totalPrice").lean();
+      createdAt: { $gte: from, $lte: end },
+      created_at: { $gte: from, $lte: end },
+    }).select("createdAt extrasPrice totalPrice created_at").lean();
 
     res.status(200).json({ status: true, bookings });
   } catch (err) {
