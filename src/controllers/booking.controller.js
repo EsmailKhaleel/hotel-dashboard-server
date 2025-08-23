@@ -324,24 +324,20 @@ exports.getBookingsAfterDate = async (req, res) => {
 // Get stays (confirmed or checked-in bookings) after a specific startDate
 exports.getStaysAfterDate = async (req, res) => {
   try {
-    // date must be in ISO format, e.g. 2025-10-01T00:00:00Z
     const { date } = req.query;
-    if (!date) {
-      return errorResponse(res, "Date query parameter is required", 400);
-    }
+    if (!date) return errorResponse(res, "Date query parameter is required", 400);
+
+    const from = new Date(date);
+    if (Number.isNaN(from.getTime())) return errorResponse(res, "Invalid ISO date", 400);
+
+    const { start: todayStart } = getTodayRange();
 
     const stays = await Booking.find({
-      startDate: {
-        $gte: date,
-        $lt: getToday({ endOfDay: false }),
-      },
+      startDate: { $gte: from, $lt: todayStart },
       status: { $in: ["checked-out", "checked-in"] },
-    });
+    }).lean();
 
-    res.status(200).json({
-      status: true,
-      stays,
-    });
+    res.status(200).json({ status: true, stays });
   } catch (err) {
     return errorResponse(res, "Error retrieving stays", 500);
   }
